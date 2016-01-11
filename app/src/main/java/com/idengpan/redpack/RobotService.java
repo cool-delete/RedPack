@@ -23,13 +23,20 @@ public class RobotService extends AccessibilityService {
 
         //窗口内容有变化，判断是否有红包
         if(event.getEventType() == AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED){
-            List<AccessibilityNodeInfo> hbs = mNodeInfo.findAccessibilityNodeInfosByText("");
+            List<AccessibilityNodeInfo> hbs = mNodeInfo.findAccessibilityNodeInfosByText("微信红包");
             if(hbs.size() > 0){
                 AccessibilityNodeInfo curNodeInfo = hbs.get(hbs.size() - 1);
                 curNodeInfo.getParent().performAction(AccessibilityNodeInfo.ACTION_CLICK);
             }
         }
 
+        if(event.getEventType() == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED){
+            List<AccessibilityNodeInfo> popWindowList = mNodeInfo.findAccessibilityNodeInfosByText("拆红包");
+            if(popWindowList.size() > 0){
+                AccessibilityNodeInfo accessibilityNodeInfo = popWindowList.get(popWindowList.size()-1);
+                accessibilityNodeInfo.performAction(AccessibilityNodeInfo.ACTION_CLICK);
+            }
+        }
 
     }
 
