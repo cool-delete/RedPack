@@ -1,9 +1,6 @@
 package com.idengpan.redpack;
 
 import android.accessibilityservice.AccessibilityService;
-import android.app.Service;
-import android.content.Intent;
-import android.os.IBinder;
 import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
 
@@ -25,10 +22,9 @@ public class RobotService extends AccessibilityService {
         //窗口内容有变化，判断是否有红包
         if(event.getEventType() == AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED){
             List<AccessibilityNodeInfo> hbs = mNodeInfo.findAccessibilityNodeInfosByText("微信红包");
-            if(hbs.size() > 0 && hbs.size() > robbed){
+            if(hbs.size() > 0){
                 AccessibilityNodeInfo curNodeInfo = hbs.get(hbs.size() - 1);
                 curNodeInfo.getParent().performAction(AccessibilityNodeInfo.ACTION_CLICK);
-                robbed += 1;
             }
         }
 
