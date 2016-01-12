@@ -12,10 +12,18 @@
     tools:context="com.idengpan.redpack.MainActivity"
     tools:showIn="@layout/activity_main">
 
-    <TextView
+    <TextView android:id="@+id/tv"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Hello World!" />
 
-
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/btn"
+        android:layout_marginLeft="15dip"
+        android:layout_marginRight="15dip"
+        android:layout_below="@id/tv"
+        android:layout_marginTop="20dip"
+        android:text="测试Property动画"/>
 </RelativeLayout>
