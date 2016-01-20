@@ -42,23 +42,6 @@ public class RobotService extends AccessibilityService {
         ((KeyguardManager) getSystemService(Context.KEYGUARD_SERVICE)).newKeyguardLock("unLock").disableKeyguard();
     }
 
-    private void processWeixin() {
-        List localList = getRootInActiveWindow().findAccessibilityNodeInfosByText("领取红包");
-        if (localList != null && localList.size() > 0) {
-            AccessibilityNodeInfo recentNode = ((AccessibilityNodeInfo) localList.get(localList.size() - 1));
-            if (recentNode.getParent() != null) {
-                recentNode.getParent().performAction(AccessibilityNodeInfo.ACTION_CLICK);
-            } else {
-                recentNode.performAction(AccessibilityNodeInfo.ACTION_CLICK);
-            }
-
-
-        }
-
-
-    }
-
-
     @Override
     public void onAccessibilityEvent(AccessibilityEvent event) {
         /*mNodeInfo = event.getSource();
@@ -166,7 +149,6 @@ public class RobotService extends AccessibilityService {
         } catch (Exception localException) {
             localException.printStackTrace();
         }
-        processWeixin();
     }
 
 
