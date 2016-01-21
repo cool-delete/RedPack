@@ -26,5 +26,5 @@
         android:layout_below="@id/tv"
         android:layout_marginTop="20dip"
         android:text="测试Property动画"
-        android:background="?android:attr/selectableItemBackgroundBorderless"/>
+        android:background="?android:attr/selectableItemBackground"/>
 </RelativeLayout>
