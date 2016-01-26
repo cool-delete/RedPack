@@ -22,6 +22,8 @@ import android.widget.Toast;
 public class MainActivity extends AppCompatActivity {
 
     private TextView tv;
+
+    private static final String SERVICE_NAME = ".HongbaoService";
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -53,7 +55,7 @@ public class MainActivity extends AppCompatActivity {
 
         String accessibilityEnabledString = Settings.Secure.getString(getContentResolver(), Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES);
         Log.d("idengpan","accessibilityEnabledString = " + accessibilityEnabledString);//com.idengpan.redpack/com.idengpan.redpack.RobotService
-        if(!accessibilityEnabledString.contains(".RobotService")){//com.idengpan.redpack/.RobotService
+        if(!accessibilityEnabledString.contains(SERVICE_NAME)){//com.idengpan.redpack/.RobotService
             tv.setText(Html.fromHtml("<font color = gray>服务未开启</font>"));
             AlertDialog.Builder builder = new AlertDialog.Builder(this);
             builder.setTitle("特别提示");
@@ -92,7 +94,7 @@ public class MainActivity extends AppCompatActivity {
         if(requestCode == 0){
             String accessibilityEnabledString = Settings.Secure.getString(getContentResolver(), Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES);
             Log.d("idengpan","accessibilityEnabledString = " + accessibilityEnabledString);//com.idengpan.redpack/com.idengpan.redpack.RobotService
-            if(accessibilityEnabledString.contains(".RobotService")){
+            if(accessibilityEnabledString.contains(SERVICE_NAME)){
                 //Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
                 tv.setText(Html.fromHtml("<font color = green>服务已开启</font>"));
                 Toast.makeText(this,"设置成功，开始自动抢红包啦！",Toast.LENGTH_SHORT).show();
