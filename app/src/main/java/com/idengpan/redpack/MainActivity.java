@@ -39,6 +39,7 @@ public class MainActivity extends AppCompatActivity {
                         .setAction("Action", null).show();
             }
         });
+        fab.setVisibility(View.GONE);
 
         tv = (TextView)findViewById(R.id.tv);
         final Button btn = (Button)findViewById(R.id.btn);

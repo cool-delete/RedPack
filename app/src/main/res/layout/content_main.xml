@@ -12,19 +12,49 @@
     tools:context="com.idengpan.redpack.MainActivity"
     tools:showIn="@layout/activity_main">
 
-    <TextView android:id="@+id/tv"
+    <TextView
+        android:id="@+id/tv"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Hello World!" />
+        android:text="Hello World!"
+        android:textStyle="bold"/>
 
     <Button
+        android:id="@+id/btn"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:id="@+id/btn"
+        android:layout_below="@id/tv"
         android:layout_marginLeft="15dip"
         android:layout_marginRight="15dip"
-        android:layout_below="@id/tv"
-        android:layout_marginTop="20dip"
-        android:text="设置抢红包辅助服务"
-        android:background="?android:attr/selectableItemBackground"/>
+        android:layout_marginTop="5dip"
+        android:text="设置抢红包辅助服务" />
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginTop="10dip"
+        android:layout_below="@id/btn"
+        android:scrollbars="none">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:padding="10dip">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="主要功能：\n1、收到通知自动解锁抢红包\n2、主界面收到红包自动抢\n3、群聊界面自动抢红包\n\n注意事项:\n\n1、不要禁用微信通知\n2、在电脑登陆微信时，请关闭手机消息免打扰"
+                android:textStyle="bold"
+                android:textColor="@android:color/black"/>
+            <ImageView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:src="@drawable/notice_tip"
+                android:padding="0dip"
+                android:scaleType="fitStart"
+                android:layout_marginTop="5dip"/>
+        </LinearLayout>
+    </ScrollView>
 </RelativeLayout>
