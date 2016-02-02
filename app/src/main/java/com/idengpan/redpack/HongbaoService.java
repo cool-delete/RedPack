@@ -9,6 +9,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Build;
+import android.os.Handler;
+import android.os.Message;
 import android.os.Parcelable;
 import android.os.PowerManager;
 import android.preference.PreferenceManager;
@@ -43,9 +45,29 @@ public class HongbaoService extends AccessibilityService {
 
     public static Map<String, Boolean> watchedFlags = new HashMap<>();
 
+    // -------------------------------2016年02月02日22:28:33------------------------------------
+    //微信包名
     private static final String PACKAGE_MM = "com.tencent.mm";
 
+    //支付宝包名
     private static final String PACKAGE_ALIPAY = "com.eg.android.AlipayGphone";
+
+    private static final int MSG_NODE_CLICK = 0x110;
+
+    //是否能够不停点击咻咻的开关
+    private boolean isCanCyclingClick = false;
+
+
+    private Handler mHandler = new Handler(){
+        @Override
+        public void handleMessage(Message msg) {
+            super.handleMessage(msg);
+            if(msg.what == MSG_NODE_CLICK){
+                AccessibilityNodeInfo btnNode = (AccessibilityNodeInfo) msg.obj;
+                btnNode.performAction(AccessibilityNodeInfo.ACTION_CLICK);
+            }
+        }
+    };
 
     /**
      * AccessibilityEvent的回调方法
@@ -56,7 +78,6 @@ public class HongbaoService extends AccessibilityService {
     @Override
     public void onAccessibilityEvent(AccessibilityEvent event) {
 
-        Log.d("idengpan","--全局--"+event.getPackageName() + ","+event.getEventType()+"," + event.getClassName());
         if(event.getPackageName().equals(PACKAGE_MM)){
             if (watchedFlags == null) return;
 
@@ -105,34 +126,32 @@ public class HongbaoService extends AccessibilityService {
                 //进入咻咻界面
                 if("com.alipay.android.wallet.newyear.activity.MonkeyYearActivity".equals(event.getClassName())){
                     System.out.println("支付宝自动咻咻:" + getEventName(event.getEventType()) + "," + event.getClassName());
+                    isCanCyclingClick = true;
                     AccessibilityNodeInfo btn = getButtonInfo(getRootInActiveWindow());
                     if(btn != null){
-                        wait(100);
-                        btn.performAction(AccessibilityNodeInfo.ACTION_CLICK);
+                        dontStopClick(btn);
+                        //wait(100);
+                        //btn.performAction(AccessibilityNodeInfo.ACTION_CLICK);
                     }
                 }else if("android.app.Dialog".equals(event.getClassName())){//弹窗是Dialog
-                    Log.d("idengpan","弹窗了吧"+event.getClassName());
+                    Log.d("idengpan","弹窗了吧"+event.getClassName()+","+event.getSource().getClassName());
                     isCanCyclingClick = false;
-                    wait(200);
-                    //AccessibilityNodeInfo closeImg = getImageInfo(event.getSource().getParent());
-                    //if(closeImg != null){
-                     //   closeImg.performAction(AccessibilityNodeInfo.ACTION_CLICK);
-                   // }
+                    wait(1500);
                     performGlobalAction(GLOBAL_ACTION_BACK);
                 }else{
                     Log.d("idengpan","不知道是啥？"+event.getClassName());
+                    isCanCyclingClick = true;
+                    if(timer != null){
+                        timer.cancel();
+                        timer = null;
+                    }
                 }
                 return;
             }
             if(event.getEventType() == AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED){
-                Log.d("idengpan", "支付宝自动咻咻内容改变:" + event.getClassName());
-
+                Log.d("idengpan", "咻咻内容改变:" + event.getClassName());
                 if(!isCanCyclingClick){
-                    AccessibilityNodeInfo btn = getButtonInfo(getRootInActiveWindow());
-                    if(btn != null){
-                        isCanCyclingClick = true;
-                        dontStopClick(btn);
-                    }
+                    isCanCyclingClick = true;
                 }
             }else{
                 Log.d("idengpan",event.getEventType()+"," + event.getClassName());
@@ -142,37 +161,28 @@ public class HongbaoService extends AccessibilityService {
 
     }
 
-    //是否能够不停点击咻咻的开关
-    private boolean isCanCyclingClick = false;
-
-    private void dontStopClick(AccessibilityNodeInfo btn){
-        while(isCanCyclingClick){
-            wait(100);
-            btn.performAction(AccessibilityNodeInfo.ACTION_CLICK);
+    private Timer timer;
+    private void dontStopClick(final AccessibilityNodeInfo btn){
+        if(timer == null){
+            timer= new Timer();
+            timer.schedule(new TimerTask() {
+                @Override
+                public void run() {
+                    if(isCanCyclingClick){
+                        Message m = mHandler.obtainMessage(MSG_NODE_CLICK, btn);
+                        mHandler.sendMessage(m);
+                    }
+                }
+            },100,100);
         }
     }
 
     //筛选出咻咻的button，进行不停的点击
     private AccessibilityNodeInfo getButtonInfo(AccessibilityNodeInfo parent){
         if(parent != null && parent.getChildCount() > 0){
-            for(int i = 0 ;i < parent.getChildCount() ;i ++){
+            for(int i = 0 ;i < parent.getChildCount() ;i++){
                 AccessibilityNodeInfo node = parent.getChild(i);
-                System.out.println("支付宝"+i + "子View:" + node.getClassName() +","+ node.getText());
                 if("android.widget.Button".equals(node.getClassName())){
-                    return node;
-                }
-            }
-        }
-        return null;
-    }
-
-    //筛选出点击中途出现的弹窗，找出关闭按钮
-    private AccessibilityNodeInfo getImageInfo(AccessibilityNodeInfo parent){
-        if(parent != null && parent.getChildCount() > 0){
-            for(int i = 0 ;i < parent.getChildCount() ;i ++){
-                AccessibilityNodeInfo node = parent.getChild(i);
-                Log.d("idengpan",node.getClassName()+"," + node.getText()+", id = "+node.getViewIdResourceName());
-                if("android.widget.ImageView".equals(node.getClassName())){
                     return node;
                 }
             }
@@ -240,7 +250,14 @@ public class HongbaoService extends AccessibilityService {
 
     @Override
     public void onInterrupt() {
-
+        isCanCyclingClick = false;
+        if(timer != null){
+            timer.cancel();
+            timer = null;
+        }
+        Log.d("idengpan", "服务onInterrupt...");
+        Intent intent = new Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS);
+        startActivity(intent);
     }
 
     /**
@@ -326,6 +343,7 @@ public class HongbaoService extends AccessibilityService {
     @Override
     public void onServiceConnected() {
         super.onServiceConnected();
+        Log.d("idengpan","辅助服务onServiceConnected");
         watchFlagsFromPreference();
     }
 
@@ -349,6 +367,10 @@ public class HongbaoService extends AccessibilityService {
     @Override
     public void onDestroy() {
         isCanCyclingClick = false;
+        if(timer != null){
+            timer.cancel();
+            timer = null;
+        }
         Log.d("idengpan", "服务onDestroy了...");
         super.onDestroy();
         //onCreate();
