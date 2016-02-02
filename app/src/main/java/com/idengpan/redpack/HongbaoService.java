@@ -257,6 +257,7 @@ public class HongbaoService extends AccessibilityService {
         }
         Log.d("idengpan", "服务onInterrupt...");
         Intent intent = new Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         startActivity(intent);
     }
 
@@ -375,6 +376,7 @@ public class HongbaoService extends AccessibilityService {
         super.onDestroy();
         //onCreate();
         Intent intent = new Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         startActivity(intent);
     }
 }
