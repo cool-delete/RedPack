@@ -45,7 +45,7 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="主要功能：\n1、收到通知自动解锁抢红包\n2、主界面收到红包自动抢\n3、群聊界面自动抢红包\n\n注意事项:\n\n1、不要禁用微信通知\n2、在电脑登陆微信时，请关闭手机消息免打扰"
+                android:text="主要功能：\n1、收到通知自动解锁抢红包\n2、主界面收到红包自动抢\n3、群聊界面自动抢红包\n\n注意事项:\n1、不要禁用微信通知\n2、在电脑登陆微信时，请关闭手机消息免打扰"
                 android:textStyle="bold"
                 android:textColor="@android:color/black"/>
             <ImageView
