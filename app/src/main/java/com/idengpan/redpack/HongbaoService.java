@@ -5,7 +5,6 @@ import android.annotation.TargetApi;
 import android.app.KeyguardManager;
 import android.app.Notification;
 import android.app.PendingIntent;
-import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -13,6 +12,7 @@ import android.os.Build;
 import android.os.Parcelable;
 import android.os.PowerManager;
 import android.preference.PreferenceManager;
+import android.provider.Settings;
 import android.util.Log;
 import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
@@ -43,6 +43,10 @@ public class HongbaoService extends AccessibilityService {
 
     public static Map<String, Boolean> watchedFlags = new HashMap<>();
 
+    private static final String PACKAGE_MM = "com.tencent.mm";
+
+    private static final String PACKAGE_ALIPAY = "com.eg.android.AlipayGphone";
+
     /**
      * AccessibilityEvent的回调方法
      *
@@ -51,47 +55,147 @@ public class HongbaoService extends AccessibilityService {
     @TargetApi(Build.VERSION_CODES.JELLY_BEAN)
     @Override
     public void onAccessibilityEvent(AccessibilityEvent event) {
-        if (watchedFlags == null) return;
+
+        Log.d("idengpan","--全局--"+event.getPackageName() + ","+event.getEventType()+"," + event.getClassName());
+        if(event.getPackageName().equals(PACKAGE_MM)){
+            if (watchedFlags == null) return;
 
         /* 检测通知消息 */
-        if (!mMutex) {
-            if (watchedFlags.get("pref_watch_notification") && watchNotifications(event)) return;
-            if (watchedFlags.get("pref_watch_list") && watchList(event)) return;
-        }
+            if (!mMutex) {
+                if (watchedFlags.get("pref_watch_notification") && watchNotifications(event)) return;
+                if (watchedFlags.get("pref_watch_list") && watchList(event)) return;
+            }
 
-        if (!watchedFlags.get("pref_watch_chat")) return;
+            if (!watchedFlags.get("pref_watch_chat")) return;
 
-        this.rootNodeInfo = event.getSource();
+            this.rootNodeInfo = event.getSource();
 
-        if (rootNodeInfo == null) return;
+            if (rootNodeInfo == null) return;
 
-        mReceiveNode = null;
-        mUnpackNode = null;
+            mReceiveNode = null;
+            mUnpackNode = null;
 
-        checkNodeInfo();
+            checkNodeInfo();
 
         /* 如果已经接收到红包并且还没有戳开 */
-        if (mLuckyMoneyReceived && !mLuckyMoneyPicked && (mReceiveNode != null)) {
-            mMutex = true;
+            if (mLuckyMoneyReceived && !mLuckyMoneyPicked && (mReceiveNode != null)) {
+                mMutex = true;
 
-            AccessibilityNodeInfo cellNode = mReceiveNode;
-            cellNode.getParent().performAction(AccessibilityNodeInfo.ACTION_CLICK);
-            mLuckyMoneyReceived = false;
-            mLuckyMoneyPicked = true;
-        }
+                AccessibilityNodeInfo cellNode = mReceiveNode;
+                cellNode.getParent().performAction(AccessibilityNodeInfo.ACTION_CLICK);
+                mLuckyMoneyReceived = false;
+                mLuckyMoneyPicked = true;
+            }
         /* 如果戳开但还未领取 */
-        if (mNeedUnpack && (mUnpackNode != null)) {
-            AccessibilityNodeInfo cellNode = mUnpackNode;
-            cellNode.performAction(AccessibilityNodeInfo.ACTION_CLICK);
-            mNeedUnpack = false;
-        }
+            if (mNeedUnpack && (mUnpackNode != null)) {
+                AccessibilityNodeInfo cellNode = mUnpackNode;
+                cellNode.performAction(AccessibilityNodeInfo.ACTION_CLICK);
+                mNeedUnpack = false;
+            }
 
 
-        if (mNeedBack) {
-            performGlobalAction(GLOBAL_ACTION_BACK);
-            mMutex = false;
-            mNeedBack = false;
+            if (mNeedBack) {
+                performGlobalAction(GLOBAL_ACTION_BACK);
+                mMutex = false;
+                mNeedBack = false;
+            }
+        }else if(event.getPackageName().equals(PACKAGE_ALIPAY)){
+            Log.d("idengpan","全局"+event.getEventType()+"," + event.getClassName());
+            if(event.getEventType() == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED){
+                //进入咻咻界面
+                if("com.alipay.android.wallet.newyear.activity.MonkeyYearActivity".equals(event.getClassName())){
+                    System.out.println("支付宝自动咻咻:" + getEventName(event.getEventType()) + "," + event.getClassName());
+                    AccessibilityNodeInfo btn = getButtonInfo(getRootInActiveWindow());
+                    if(btn != null){
+                        wait(100);
+                        btn.performAction(AccessibilityNodeInfo.ACTION_CLICK);
+                    }
+                }else if("android.app.Dialog".equals(event.getClassName())){//弹窗是Dialog
+                    Log.d("idengpan","弹窗了吧"+event.getClassName());
+                    isCanCyclingClick = false;
+                    wait(200);
+                    //AccessibilityNodeInfo closeImg = getImageInfo(event.getSource().getParent());
+                    //if(closeImg != null){
+                     //   closeImg.performAction(AccessibilityNodeInfo.ACTION_CLICK);
+                   // }
+                    performGlobalAction(GLOBAL_ACTION_BACK);
+                }else{
+                    Log.d("idengpan","不知道是啥？"+event.getClassName());
+                }
+                return;
+            }
+            if(event.getEventType() == AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED){
+                Log.d("idengpan", "支付宝自动咻咻内容改变:" + event.getClassName());
+
+                if(!isCanCyclingClick){
+                    AccessibilityNodeInfo btn = getButtonInfo(getRootInActiveWindow());
+                    if(btn != null){
+                        isCanCyclingClick = true;
+                        dontStopClick(btn);
+                    }
+                }
+            }else{
+                Log.d("idengpan",event.getEventType()+"," + event.getClassName());
+            }
+
         }
+
+    }
+
+    //是否能够不停点击咻咻的开关
+    private boolean isCanCyclingClick = false;
+
+    private void dontStopClick(AccessibilityNodeInfo btn){
+        while(isCanCyclingClick){
+            wait(100);
+            btn.performAction(AccessibilityNodeInfo.ACTION_CLICK);
+        }
+    }
+
+    //筛选出咻咻的button，进行不停的点击
+    private AccessibilityNodeInfo getButtonInfo(AccessibilityNodeInfo parent){
+        if(parent != null && parent.getChildCount() > 0){
+            for(int i = 0 ;i < parent.getChildCount() ;i ++){
+                AccessibilityNodeInfo node = parent.getChild(i);
+                System.out.println("支付宝"+i + "子View:" + node.getClassName() +","+ node.getText());
+                if("android.widget.Button".equals(node.getClassName())){
+                    return node;
+                }
+            }
+        }
+        return null;
+    }
+
+    //筛选出点击中途出现的弹窗，找出关闭按钮
+    private AccessibilityNodeInfo getImageInfo(AccessibilityNodeInfo parent){
+        if(parent != null && parent.getChildCount() > 0){
+            for(int i = 0 ;i < parent.getChildCount() ;i ++){
+                AccessibilityNodeInfo node = parent.getChild(i);
+                Log.d("idengpan",node.getClassName()+"," + node.getText()+", id = "+node.getViewIdResourceName());
+                if("android.widget.ImageView".equals(node.getClassName())){
+                    return node;
+                }
+            }
+        }
+        return null;
+    }
+
+    private void wait(int microSeconds){
+        try {
+            Thread.sleep(microSeconds);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private String getEventName(int type){
+        switch(type){
+            case AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED:
+                return "窗口内容改变";
+            case AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED:
+                return "状态改变";
+        }
+        return "";
     }
 
     private boolean watchList(AccessibilityEvent event) {
@@ -239,5 +343,16 @@ public class HongbaoService extends AccessibilityService {
         for (String flag : flagsList) {
             watchedFlags.put(flag, sharedPreferences.getBoolean(flag, true));//这里我默认改为true，都监听
         }
+    }
+
+
+    @Override
+    public void onDestroy() {
+        isCanCyclingClick = false;
+        Log.d("idengpan", "服务onDestroy了...");
+        super.onDestroy();
+        //onCreate();
+        Intent intent = new Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS);
+        startActivity(intent);
     }
 }
