@@ -36,11 +36,11 @@ public class HongbaoSignature {
         return this.getSignature(this.sender, this.content, this.time);
     }
 
-    private String getSignature(String... strings) {
-        String signature = "";
+    private  String getSignature(String... strings) {
+         StringBuffer signature = new StringBuffer();
         for (String str : strings) {
             if (str == null) return null;
-            signature += str + "|";
+            signature.append(str + "|)";
         }
 
         return signature.substring(0, signature.length() - 1);
